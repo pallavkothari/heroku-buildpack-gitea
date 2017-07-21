@@ -1,0 +1,52 @@
+#!/usr/bin/env bash 
+
+set -e 
+
+BP_DIR="$(cd "$(dirname "$0")" && pwd)"
+BUILD_DIR=$1
+CACHE_DIR=$2
+OPT_DIR=$BP_DIR/../opt/
+PROFILED_DIR=$BUILD_DIR/.profile.d
+
+GOHOME=$BUILD_DIR/.gohome
+export GOROOT=$GOHOME/go
+export GOPATH=$BUILD_DIR/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+mkdir -p $GOROOT/bin
+cd $GOHOME
+
+
+echo "downloading golang..."
+curl -O  https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz
+tar -xvf go1.8.3.linux-amd64.tar.gz
+
+
+mkdir -p $BUILD_DIR/gitea
+cd $BUILD_DIR/gitea
+
+echo "downloading gitea..."
+curl -o gitea https://github.com/go-gitea/gitea/releases/download/v1.1.2/gitea-1.1.2-linux-amd64
+chmod +x gitea
+
+# write out a start script
+cat <<EOF > ${BUILD_DIR}/start.sh
+#!/usr/bin/env bash
+
+set -e
+./gitea/gitea web -p $PORT
+EOF
+
+
+mkdir -p $PROFILED_DIR
+
+# put this under .profile.d so that the dyno gets it at runtime
+cat <<EOF > ${PROFILED_DIR}/golang.sh
+#!/bin/bash
+set -e
+export GOHOME=/app/.gohome
+export GOROOT=/app/.gohome/go
+export GOPATH=/app/go
+export PATH=/app/go/bin:/app/.gohome/go/bin:$PATH
+EOF
+
