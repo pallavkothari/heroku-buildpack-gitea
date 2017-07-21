@@ -34,7 +34,7 @@ cat <<EOF > ${BUILD_DIR}/start.sh
 #!/usr/bin/env bash
 
 set -e
-./gitea/gitea web -p $PORT
+./gitea/gitea web -p \$PORT
 EOF
 
 chmod +x ${BUILD_DIR}/start.sh
